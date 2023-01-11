@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Cap 308</title>
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+        <script type="module">
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawMoisture);
+        google.charts.setOnLoadCallback(drawPh);
+        google.charts.setOnLoadCallback(drawTemperature);
+        google.charts.setOnLoadCallback(drawPhTemp);
+        google.charts.setOnLoadCallback(drawPhMois);
+
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, onChildChanged, onChildAdded, onValue, child, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBctTQgaRs0XqiAqmTF8mb446QkeyEW25w",
+            authDomain: "pmtcv3.firebaseapp.com",
+            databaseURL: "https://pmtcv3-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "pmtcv3",
+            storageBucket: "pmtcv3.appspot.com",
+            messagingSenderId: "632098215903",
+            appId: "1:632098215903:web:128c27b5fd86028a52166a"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, "https://pmtcv3-default-rtdb.europe-west1.firebasedatabase.app");
+        const parent = ref(db, "parent");
+
+        function drawMoisture() {
+            var data = google.visualization.arrayToDataTable([
+            [{label: "Time", type: "string"}, {label: "Moisture", type: "number"}]
+            ]);
+
+            var options = {
+            title: 'Moisture vs Time',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            hAxis: {title: "Time"},
+            vAxis: {title: "Moisture"}
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('moisture_chart'));
+
+            const moistureRef = child(parent, "moisture");
+
+            onChildAdded(parent,(snap)=>{
+                var dateObj = new Date(snap.toJSON()["Timestamp"] * 1000);
+                data.addRow([dateObj.toLocaleTimeString(), parseFloat(snap.toJSON()["moisture"])]);
+                if(data.getNumberOfRows() > 20){
+                    data.removeRow(0);
+                }
+                chart.draw(data, options);
+            });
+
+            chart.draw(data, options);
+        }
+
+        function drawPh() {
+            var data = google.visualization.arrayToDataTable([
+            [{label: "Time", type: "string"}, {label: "Ph", type: "number"}]
+            ]);
+
+            var options = {
+            title: 'Ph vs Time',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            hAxis: {title: "Time"},
+            vAxis: {title: "Ph"}
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('ph_chart'));
+
+            const phRef = child(parent, "pH");
+
+            onChildAdded(parent,(snap)=>{
+                var dateObj = new Date(snap.toJSON()["Timestamp"] * 1000);
+                data.addRow([dateObj.toLocaleTimeString(), snap.toJSON()["pH"]]);
+                if(data.getNumberOfRows() > 20){
+                    data.removeRow(0);
+                }
+                chart.draw(data, options);
+            });
+
+            chart.draw(data, options);
+        }
+
+        function drawTemperature() {
+            var data = google.visualization.arrayToDataTable([
+            [{label: "Time", type: "string"}, {label: "Temperature", type: "number"}]
+            ]);
+
+            var options = {
+            title: 'Temperature vs Time',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            hAxis: {title: "Time"},
+            vAxis: {title: "Temperature"}
+            };
+
+            var chart = new google.visualization.LineChart(document.getElementById('temperature_chart'));
+
+            const tempRef = child(parent, "tempC");
+
+            onChildAdded(parent,(snap)=>{
+                var dateObj = new Date(snap.toJSON()["Timestamp"] * 1000);
+                data.addRow([dateObj.toLocaleTimeString(), snap.toJSON()["tempC"]]);
+                if(data.getNumberOfRows() > 20){
+                    data.removeRow(0);
+                }
+                chart.draw(data, options);
+            });
+
+            chart.draw(data, options);
+        }
+
+        function drawPhTemp() {
+            var data = google.visualization.arrayToDataTable([
+            [{label: "Temperature", type: "number"}, {label: "Ph", type: "number"}]
+            ]);
+
+            var options = {
+            title: 'Ph vs Temperature',
+            legend: { position: 'bottom' },
+            hAxis: {title: "Temperature"},
+            vAxis: {title: "Ph"},
+            lineWidth: 2
+            };
+
+            var chart = new google.visualization.ScatterChart(document.getElementById('ph_temperature'));
+
+            onChildAdded(parent,(snap)=>{
+                var tempC = snap.toJSON()["tempC"];
+                var ph = snap.toJSON()["pH"];
+                data.addRow([tempC, ph]);
+                if(data.getNumberOfRows() > 20){
+                    data.removeRow(0);
+                }
+                chart.draw(data, options);
+            });
+
+            chart.draw(data, options);
+        }
+
+        function drawPhMois() {
+            var data = google.visualization.arrayToDataTable([
+            [{label: "Moisture", type: "number"}, {label: "Ph", type: "number"}]
+            ]);
+
+            var options = {
+            title: 'Ph vs Moisture',
+            legend: { position: 'bottom' },
+            hAxis: {title: "Moisture"},
+            vAxis: {title: "Ph"},
+            lineWidth: 2
+            };
+
+            var chart = new google.visualization.ScatterChart(document.getElementById('ph_moisture'));
+
+            const phRef = child(parent, "pH");
+            const moistureRef = child(parent, "moisture");
+
+            onChildAdded(parent,(snap)=>{
+                var mois = snap.toJSON()["moisture"];
+                var ph = snap.toJSON()["pH"];
+                data.addRow([parseFloat(mois), ph]);
+                if(data.getNumberOfRows() > 20){
+                    data.removeRow(0);
+                }
+                chart.draw(data, options);
+            });
+
+            chart.draw(data, options);
+        }
+        </script>
+    </head>
+
+    <body>
+        <div class="container">
+            <div id="moisture_chart" style="width: 900px; height: 500px"></div>
+            <div id="ph_chart" style="width: 900px; height: 500px"></div>
+            <div id="temperature_chart" style="width: 900px; height: 500px"></div>
+            <div id="ph_temperature" style="width: 900px; height: 500px"></div>
+            <div id="ph_moisture" style="width: 900px; height: 500px"></div>
+        </div>
+    </body>
+</html>
